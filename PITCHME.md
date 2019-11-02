@@ -4,8 +4,9 @@
 ## 自己紹介
 
 - @suginoy
-  - 「すぎの」（「い」は不要）
+  - 「すぎの」
 - フリーランスプログラマー
+  - 2011 ~
   - 川崎在住
 - 富山県小矢部市出身
   - 某Rubyコミッタも同じ中学校出身
@@ -15,48 +16,79 @@
 ## おめでとうございます！
 
 - 第1回参加メンバー
+  - 富山出身のメンバーがいる某女性ボーカルユニットKalafinaのネタをスキあらばぶっこむ係
 
 ---
 ## 今日のお題 
 
-### Ruby on Rails を使って、個人でクローラーを作ってみた話をします。
+### Ruby on Rails を使って、"個人で" クローラーを作ってみた話
+
+---
+## あなたに質問
+- Rubyをそれなりに使っている人？
+- Ruby on Railsについて少し知っている人？
+- Ruby on Railsを仕事等で使っている人？
+- クローラーを作ったことがある人？
 
 ---
 ## 動機
 
 ### ある日思い立つ。
-### 「メタサーチエンジンを作ってみたい。」
+### 「メタサーチエンジンを  
+###  作ってみたい。」
 
 ---
-### メタサーチエンジン(メタ検索エンジン)とは？
+## メタサーチエンジン  
+## (メタ検索エンジン)
+## とは？
 
 > メタ検索エンジン（メタけんさくエンジン）は、入力されたキーワードを複数の検索エンジンに送信し、得られた結果を表示するタイプの検索エンジン。メタサーチエンジン、横断検索エンジンとも呼ぶ。
 
 [Wikipedia「メタ検索エンジン」](https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%B3)
 
+---
+## 横断検索
 - ホテルとか
 - 映画館とか
 - ECサイトとか
 
 --- 
-## 要は、特定ジャンルの横断検索がしたい
+## 特定ジャンルの  
+## 横断検索がしたい
 
 - データが必要
 - 往々にして、サイトがライバルどうしだったりする
 - API があるのは稀
 
-### => 取ってくるしかない
+---
+## 自分で取ってくるしかない
 
 ---
-## クローラーを作ってみよう
+## クローラーを
+## 作ってみよう
 
-### ここでの定義
-- クロール/クローラー
+---
+## クローラーの効能
+- HTTP、HTML、SEO、文字コードに詳しくなる
+- データモデリングの練習になる
+- 各サイトの実装方針に詳しくなる
+  - SPA
+  - APIの分け方、バージョニング
+- 中の人より仕様やバグに詳しくなる
+- 一意なURLとは何かといった哲学的な問いを考えだす
+
+---
+## 今日の話の定義(1)
+- クロール/クリーリング/クローラー
   - 外部WebサイトからHTML/JSON/XML/画像等を取得すること
 - スクレイピング/スクレイパー
   - クローラーが取得したHTML/JSON/XML等からデータを取り出すこと(+保存)
+
+---
+## 今日の話の定義(2)
 - ドメインモデル
   - クロール対象のサイトのデータモデル
+  - ActiveRecord 使う関係でDBのレコードとごっちゃに話す
 
 ---
 ## 制約
@@ -67,47 +99,52 @@
 - あまりにも複雑な仕掛けは無理
 
 ---
-## 使う技術
+## 使う技術の検討
 
 - Ruby
 - Puppetter(JavaScript)
 - BeautifulSoup(Python)
 
 ---
-## Rails で作れるのでは？
+## Railsで作れるのでは？
 
-- Rails は HTTP リクエストを受けてレスポンスを返す
-- クローラーは HTTP リクエストして、レスポンスを解析する
+- RailsはHTTPリクエストを受けてレスポンスを返す
+- クローラーはHTTPリクエストしてレスポンスを解析する
 
 ### 逆のことをやればよさそう？
-### => Rails ベースで作れそう
 
 ---
 ## Rails を使うメリット
 - ActiveRecord による容易なDBアクセス
-- ActionDispatch/Rack::Utils による HTTP 周りの便利ライブラリ
+- ActionDispatch/Rack::Utils によるHTTP周りの便利ライブラリ
 - ActiveSupprt を始めとした便利ライブラリ
 
 ---
 ## 他の言語の技術
 - Puppetter(JavaScript)
 - BeautifulSoup(Python)
+- etc.
 
 ### => 得意でないので見送った。
 
 ---
+## Rubyをキメると  
+## 気持ちいい(by Matz)
+
+---
 ## インフラ
 - GCP の機運が高まっていた
-- 多少の経験と学習のしやすさで AWS の方がやりやすいと判断
-  - ついでに AWS資格も取得してみた。
-  - IAM と VPC に多少の不安があった。
+- 多少の経験と学習のしやすさは AWS
 
-### => AWS を使うことにした。
+---
+## AWSを選択
+- ついでに AWS資格も取得してみた。
+- IAMとVPCに不安があった。
 
 ---
 ## 諦めたこと
-
-### ECS(Docker) の利用は見送って EC2 にした。
+- AWS ECS(Docker)の利用は見送り
+- EC2を選択
 
 ---
 ## Rails に足りないもの
@@ -118,79 +155,156 @@
 ---
 ## その前に要件を確認
 
-### ターゲットのサイト
-- サイトは数個〜十数個
+---
+## 対象のサイト
+- サイト数は数個〜十数個
 - URL の種類は1サイトあたり20~30個ぐらい。
-- 全部で数千ページから数十万ページ
-  - 商品とかカテゴリとか一覧とかそういうのを想像してください。
+- 1サイトあたり数千ページから数十万ページ
 - 状態がたまに変わる
-  - ページが公開終了になったり、セールをしたり、coming soon とか。
-- URL に一意性を示すID(コード値) を持っていることが多い。
+  - 公開終了、セール、coming soon とか。
+- URLに一意を示すID(コード値) を持っていることが多い。
 - ログインしなくても参照可能なページが多い。
-- 最大頻度でも1日一回クロールで十分
+- 最大頻度でも1日一回クロールで十分そう。
+
+---
+## URLが登場する箇所
+
+- `<body>` 中の静的な `a` タグ `href` 属性
+- `<head>` タグ内の `<link>` タグ
+  - `rel="canonical"`
+  - `rel="next"`
+  - `rel="prev"`
+- JavaScript が叩きに行っているエンドポイント
+- HTTP リダイレクトの Location ヘッダ
+- sitemap.xml
+- robots.txt
+- JSON-LD 内の microdata
 
 ---
 ## URL をどう保存するか
-
-- 文字列
-- 同じURLでも HTTP ヘッダで制御されている場合がある。
-
-```
-X-
-X-
-```
-
-- ページ番号などは、別途保存しておくと使いやすい。
-  - あるページから次のページの URL を取得する、 etc.
+- 単純な文字列だけではダメそう
 
 ---
-## URL が登場する箇所
-
-あとで書く
+## 同じURLでも
+- HTTPヘッダで制御されている場合がある。
+  - cookie
+  - referer
+  - 無限スクロールのAPIリクエストでHTTPヘッダで制御しているサイトがあった。
+    - リクエスト時にページ番号を `X-xxx-PAGE: 2` で送る。
+    - レスポンスヘッダで `X-xx-RESULT: OK` だったら次のページあり
 
 ---
-## Location, Crawling, Scraping
+## ページネーション対応
+- ページ番号などは、別途抽出、保存しておくと使いやすい。
+  - あるページから次のページの URL を作る, etc.
 
-### 役割
-- Location... ターゲットのサイトの URL を保存
-- Crawling... クロールしたレスポンス結果を保存
+---
+## スクレイピングの  
+## 基本モデル
+
+- Location... 対象のサイトの URL を保存
+- Crawling... Locationからクロールしたレスポンス結果を保存
 - Scraping... Scraping の成功、失敗を保存
+- 上記3つを `Crawler`クラスと `Scraper`クラスが操作する
 
 ---
-## Location, Crawling, Scraping
-### ポイント
-- 上記 3 つの ActiveRecord クラスを Crawler クラスと Scraper クラスが操作する
-- サイトのドメインモデルをできるだけ持ち込まない。
+## 必要な仕様
+### 後日クロールできるようにする
+  - 1日にクロールできる数には限界がある
+    - [Admin's Bar 5: 86,400の壁](http://admins.bar/5/)
+
+---
+## 必要な仕様
+### クローリングとスクレイピングを分ける
+- 複数ページを連続で辿らない
+  - どこでエラーが起きるかわからない
+- 1つのURL単独で処理できるようにする
+- URLのクロール順に依存しない
+- サイトのドメインモデルをできるだけ分離
+---
+## 実行イメージ
+
+---
+```rb
+> url = 'https://example.com/items/ID001'
+
+> location = Location.register!(url)
+
+> crawling = Crawler.crawl(location) # => 裏でHTTPリクエスト
+
+> crawling.http_status # => 200
+
+> crawling.body # => "<html><head>...</head></html>"
+
+> scraping = Scraper.scrape(crawling)
+
+> scraping.status # => 200 (OKの意)
+
+> Item.find_by(code: 'ID001') # => 欲しい物ができているか確認
+```
 
 ---
 ## Location
-### URLと付随情報を保存する
+- URLと付随情報を保存する
   - リクエストパラメータ
   - リファラー（同じクラス）
   - ページネーション情報
   - 次回更新日
+- URL というクラス名は避けた。
 
 ---
-## Location
-### ソースコード
 ```rb
 class Location < ApplicationRecord
   has_many :crawlings
 
   serialize :headers, JSON
 
-  validates :url, presence: true, uniqueness: { scope: [:page, :per_page] }
+  validates :url,
+    presence: true,
+    uniqueness: { scope: [:page, :per_page] }
+  validates :page, 
+    numericality: { only_integer: true },
+    allow_blank: true
+  validates :per_page,
+    numericality: { only_integer: true },
+    allow_blank: true
+
+  def self.register!(location_url, page: nil, per_page: nil, referer: self.top_page)
+    # 後述
+  end
+end
+```
+
+---
+## リファラー重要
+- `href=/index.html` などの相対パスが復元できない
+- リファラーのホストをチェックするAPI
+  - CORS
+- リダイレクト時やリンクは Location を作って紐付ける
+
+---
+```rb
+class Location < ApplicationRecord
+  # HTTP Location
+  belongs_to :following_location,
+    optional: true, class_name: 'Location'
+  # HTTP referer or href
+  belongs_to :referer,
+    optional: true, class_name: 'Location'
+  # <meta link="canonical">
+  belongs_to :canonical_location,
+    optional: true, class_name: 'Location'
 end
 ```
 
 ---
 ## Crawling
-### Crawler が HtmlCrawler/ApiCraler に移譲したレスポンス結果を保存
-- クローラー実行日時
+- Crawler が HtmlCrawler/ApiCralerに移譲したレスポンス結果を保存
+  - レスポンスヘッダ
+  - レスポンスボディ
+  - クロール日時
 
 ---
-## Crawling
-
 ```rb
 class Crawling < ApplicationRecord
   belongs_to :location
@@ -198,15 +312,16 @@ class Crawling < ApplicationRecord
 
   serialize :headers, JSON
 
-  validates :http_status, presence: true, inclusion: { in: Rack::Utils::SYMBOL_TO_STATUS_CODE.values }
+  validates :http_status, presence: true
   validates :run_date, presence: true
 end
 ```
 
 ---
 ## Scraping
-### Scraper が FooScraper に移譲した処理結果を保存
+- Scraper が FooScraper に移譲した処理結果を保存
 
+---
 ```rb
 class Scraping < ApplicationRecord
   belongs_to :crawling
@@ -217,362 +332,65 @@ end
 ```
 
 ---
-## URL を保存するクラス(Location)
+## Location その他
+- 自身の URL に対応する Crawler クラスと Scraper クラスを推測する
 
-  - 自身の URL に対応する Crawler クラスと Scraper クラスを推測する
-  - 常に絶対パスで保存するようにパスからURL全体を復元したりもする
-  - 設定したドメインに該当した URL のみしか保存できない
+---
+## 対象のURLどうする？
+- Web ページにはいろんなものが置いてある
+  - 広告、ソーシャルボタンとか
+- ヘルプページなどはクロールしたくない
+  - データをできれば少なく
 
+---
+## ドメインで絞る
+- 定数でドメインのリストを持つ
+- CDNの画像などを別にすればうまくいく
+
+---
+## config gem
+
+おなじみ定数管理ライブラリ
+
+---
+## config/settings.yml
+
+```yaml
+hostname:
+  mysite:
+  top: example.com
+  api: api.example.com
+```
+
+---
 ```rb
 class Location < ApplicationRecord
-  belongs_to :following_location, optional: true, class_name: 'Location'
-  belongs_to :referer, optional: true, class_name: 'Location'
-  belongs_to :canonical_location, optional: true, class_name: 'Location'
-
-  has_many :crawlings
-
-  serialize :headers, JSON
-
-  validates :url, presence: true, uniqueness: { scope: [:page, :per_page] }, format: { with: %r|\Ahttps?://[^\n]+\z| }, on: :create
-  validates :page, numericality: { only_integer: true }, allow_blank: true
-  validates :per_page, numericality: { only_integer: true }, allow_blank: true
-
-  def self.register!(location_url, page: nil, per_page: nil, referer: self.top_page)
-    # ...
-  end
-
   def self.target_hosts
     [
-      Settings.hostname.mysite,
+      Settings.hostname.mysite.top,
       Settings.hostname.mysite.api,
     ]
   end
-
-  def self.guess_scraper_class(url)
-    if api_url?(url)
-      [
-        Api::V1::LeanbackGenresScraper,
-        Api::V1::GenreEntitiesScraper,
-        Api::V1::SearchCategoryTitlesScraper,
-        Api::V1::FeatureTitlesScraper,
-        Api::V1::TitleScraper,
-      ].detect {|scraper| scraper.match_url?(url) }
-    else
-      raise 'ScraperClassNotFound'
-    end
-  end
-
-  def self.api_url?(url)
-    uri = URI.parse(url)
-    uri.path.match?(%r|/api|)
-  end
-
-  def canonical?
-    !canonical_location_id
-  end
 end
 ```
 
 ---
-## クローリングについて
+## 除外するURLを
+## DBテーブルにする
+
+- 該当したらURLを登録しない
+- もしくは、以後クロールしない
+- `ExclusiveLocation` と名付けた
 
 ---
-## 3種類のクローラーを用意した。
-
-- HTML クローラー(HtmlCrawler)
-  - 普通にリクエストとレスポンスを受ける。
-  - HTTP ヘッダは Chrome 同等
-- API クローラー(ApiCrawler)
-  - JavaScript などからのアクセスのフリをする。
-- ブラウザ型クローラー(BrowserCrawler)
-  - ヘッドレスブラウザとしてアクセスする。
+## 相対パス等の復元が必要
+- URI モジュールを活用
+  - `URI.parse` を通せば後は便利に使える。
 
 ---
-### Crawler クラス
-
-- スクレイパーは URL 種別だけ用意したが、クローラーは 2 つで済んだ。
-- ブラウザ型クローラーは捨てた。
-- Location クラスから HtmlCrawler か ApiCrawler かを判別して、クローリング処理を移譲する。
-
----
-## HTTPクライアントライブラリの選定
-
-- 
-
----
-## 最終的に typhoeus を使うことにした。
-
-- typhoeus のヘッダーの設定等がかんたん
-
-- libcurl wrapper
-- 動的な UI 変化は必要なかった phantom.js も不要になった。
-- open URI
-  - 開発当初、リダイレクトのオプションを知らず、リダイレクト検出できなかった。
-  - 同様の理由でブラウザ操作型もやめた。
-    - リクエストした URL と現在の URL の比較でしかリダイレクト検出できない。
-    - phantom.js の開発終了
-- Net::HTTP
-- typhoeus の API が簡単で高機能だった。
-- 並列リクエストを使う可能性があった（後述の理由により最終的に使わず)
-  
----
-## 諦めたもの
-- VASILY(現ZOZO Technology)さんみたいなかっこいい並列リクエスト
-[iQONを支えるクローラーの裏側](https://www.slideshare.net/TakehiroShiozaki/iqon-54979883)
-  - mutex などの仕掛けが一人で扱うには複雑すぎる。
-
----
-### 書籍で紹介されている手法には問題点がいくつかある
-
-- 単発のページをスクレイピングする程度で、継続運用する手法がない
-- 対象の Web サイトのその時点のスナップショットしか取れない
-  - 公開終了
-  - 30x 系
-  - ページデザイン変更
-  - サーバーメンテナンス、障害
-- どう保存するか
-
-
-### 
-
----
-## テスト
-
-
-最初は試行錯誤するので、 `rails console` で確認するだけ
-
-```
-自分は常々、テスト駆動開発とサービス開発は相性が悪いなと思っていました。新しい機能を作っているときや、新しいサービスを作っているときは、自分でも答えが見えていない状態で作っていることが多くあります。コードを書いているうちに少しずつ問題が解決されていって、最初は見えていなかったものが見えるようになり、答えがみえるようになる、ということが多々あります。作っては壊しを何度も繰り返すこともあります。
-
-テスト駆動開発では、細かい単位とは言え、ある程度事前に何を作るかを決めてテストを書きます。このプロセスが相性が悪かったのです。
-```
-
-2008-03-24 はてなブックマークの作り直しについて
-https://naoya-2.hatenadiary.org/entry/20080324/1206354054
-
----
-## rails console でこんなことをしていた。
-
-```rb
-url = 'https://example.com/items/ID001'
-
-location = Location.register!(url)
-
-crawling = Crawler.crawl(location)
-
-crawling.http_status # => 200
-
-crawling.body # => "<html><head>...</head></html>"
-
-scraping = Scraper.scrape(crawling)
-
-scraping.status # => 200 (OKの意)
-
-Item.find_by(code: 'ID001') # => 欲しい物ができているか確認
-```
-
----
-## テスト
-
-- スクレイピングの処理はテストを書かないと進捗が上がらないことに気づく
-- 他の処理は、保存に失敗する、処理ステータスでわかる、例外が上がるのですぐわかる
-- HTML を保存しては、スクレイピングの結果が合っているを確認するという地味なテストコード
-  - 外部サイトなので、レスポンスはモックする
-
----
-## 諦めたもの
-### 当初は Mninitest を憶えようとしたが、進捗が上がらず
-### 使い慣れた RSpec に切り替える
-
-## 最初の設計
-
-- かっこいい URL からスクレイピング処理を判定する router
-  - 最初は Rails の config/routes.rb のようなのを考えたがやめた。
-
-```
-Location のコード
-
-
-```
-
----
-## クローリングの紳士協定
-
-- 1秒に1回程度のアクセス頻度であること
-- 応答があってから新しい要求をするようプログラムを組んでいること
-
-Webサイトをクローリングするときに気を付けたい2つのこと
-https://ascii.jp/elem/000/001/177/1177656/
-
----
-## サイトあたりのクローリングルール
-
-- 1 つのドメインにたいしては、シリアルに URL を 1 つずつクロールする
-
----
-## 必要な仕様
-
-- 複数ページのリンクをたどらない
-  - どこでエラーになるかわからないため
-- 
-- 後日でもリクエストできるようにする
-  - 1日にクロールできる数には限界がある
-  Admin's Bar 5: 86,400の壁 (Kyuns) http://admins.bar/5/
-- 対象サイトのページ数と更新頻度を見積もり、
-- おおよそ十分だということがわかった。
-
-SQL で次のような条件を書いて、
-
----
-### ドメインを分ける
-- クローラーの仕組みとスクレイピングの仕組みを分ける
-- スクレイピングに1箇所でも失敗すると後続のクローリングができないのは困る
-- 1 つの URL で完結するようにする
-
----
-### クロールの単位
-- 単位時間あたり
-  - 1日あたりで済んだ
-- 同じURLを1回アクセス
-
----
-### 対象の URL はどうする？
-
-- Web ページにはいろんなものが
-- ソーシャルボタンとか
-
----
-### データモデル、データベース設計
-
-メタサーチエンジンを作る以上、同じモノでもサイトによって呼び方が違う。
-
-- Item / Goods
-- Genre / Category
-- Movie/ Video
-- Menu / Section
-
-### 対象のサイトの名前に合わせるのが基本
-
-- 認知不可の低減
-  - 実際にAPI の JSON の属性名や CSS やHTMLのスクレイピング処理を書くと、こうしないときつい。
-- 各サイトで微妙にデータ構造が違う
-- 属性のマッピング情報を作ることも少しだけ検討したが、デバッグの効率性などから見送った。
-
-### 諦めたもの
-- VASILY のような XPath のDB保存
-
-過去にクローリングしたHTMLも解析できないといけないため、
-スクレイピング時にクローリングした日付で判定して、ガッツリ分岐する。
-
-```rb
-
-def scrape()
-
-end
-
----
-## 諦めたもの
-
-### ドメインモデルの ActiveRecord にクロール日付を保存すること
-
-- スクレイピングは、 ActiveRecord オブジェクトを大量に保存する処理になるため、普通に書くと煩雑でコード量が増える。
-- きれいに拡張するアイデアがなかった。
-
-### 
-- 大統一データモデル(省略するかも)
-
-メタサーチエンジンを作るため、サイトAの商品XとサイトBの商品Yが同じであるという情報をもつ必要がある
-
----
-### コード体系
-
-ActiveRecord はつねにこういう構造を持つことにした。
-
-- `id` とは別に `code` というユニーク制約を持つ属性(null不可)
-- `name` という属性を持つ
-- 他の属性名は対象のサイトに合わせる
-- `code` `name` を持たない ActiveRecord はすべて紐付け等をするもの
-- url を生成するぐらいで、ほとんどただの箱
-
-### 対象のドメインのモデルとクローラーのモデルの結合度を少なくする
-
-```rb
-module CodeAccessable
-  def to_param
-    code
-  end
-
-  def original_path
-    raise NotImplementedError
-  end
-
-  def original_url
-    "https://#{Settings.hostname.mystite}" + original_path
-  end
-end
-```
-
-```rb
-class Item < ApplicationRecord
-  include CodeAccessable
-
-  validates :code, presence: true, uniqueness: true, on: :create
-
-  def original_path
-    "/items/#{code}"
-  end
-end
-```
-
----
-### 最初はこのようなナイーブな実装を試みた。(省略)
-
-### この実装の問題(省略)
-- リストをどうする
-- IDの管理をどうする
-  - おおよそ1始まりで整数だったりするが、空き番がわからない。管理するロジックを考えなくてはならない。
-  /items/ID00011
-  - 特に、過去に存在していた URL なのかどうかわからない
-
----
-
----
-### URL はどこに登場するか？
-
-- 
-- 
-- 
-
-
-```rb
-class Location < ApplicationRecord
-  DEFAULT_SCHEME = 'https'
-  REJECT_SCHEMES = ['javascript', 'tel', 'mailto']
-  ORIGIN = "#{DEFAULT_SCHEME}://#{Settings.hostname.example.com}" # config gem
-  HOST_URL = ORIGIN + '/'
-
-  belongs_to :following_location, optional: true, class_name: 'Location'
-  belongs_to :referer, optional: true, class_name: 'Location'
-  belongs_to :canonical_location, optional: true, class_name: 'Location'
-
-  has_many :crawlings, class_name: 'Crawling'
-
-  serialize :headers, JSON # リクエストヘッダー
-
-  validates :url, presence: true, uniqueness: { scope: [:page, :per_page] }, format: { with: %r|\Ahttps?://[^\n]+\z| }, on: :create
-  validates :page, numericality: { only_integer: true }, allow_blank: true
-  validates :per_page, numericality: { only_integer: true }, allow_blank: true
-end
-```
-
----
-## 相対パス等の復元
-### module URI 活用
-
 ```rb
 class Location < ApplicationRecord
   def self.register!(location_url, page: nil, per_page: nil, referer: self.top_page)
-
     return nil if location_url.blank? || location_url.in?(['/', '#']) || REJECT_SCHEMES.any? {|scheme| location_url.start_with?(scheme) }
     return nil if !location_url.start_with?('http') && !location_url.start_with?('/')
 
@@ -589,7 +407,7 @@ class Location < ApplicationRecord
     referer_uri = URI.parse(referer&.url || HOST_URL)
     if uri.relative?
       uri.scheme ||= (referer_uri.scheme || DEFAULT_SCHEME)
-      uri.host = Settings.hostname.unext.video_api
+      uri.host = Settings.hostname.mysite
     end
     page ||= parsed_query_page(uri.query)
 
@@ -609,185 +427,149 @@ end
 ```
 
 ---
-## 複雑な URL
-
-
----
-### ?_=12340000000000000
+## 次はクローリング
 
 ---
-- ExclusiveLocation
-  - 同一ドメイン内で、アクセスしないページを定義する
-  - ヘルプページなど
-- Crawler
-  - Location を元に HTTP アクセスを行い、レスポンスを Crawling クラスに保存する
-- Crawling
-  - 日付ごとにレスポンスを保存する
-    - http_status
-    - header
-    - body
-    - クロール日付
-  - 一部リダイレクト等で Location を作成する
-- Scraper
-  - Crawling を元に対象のドメインモデルのデータをもりもり作る
-  - 成功/失敗を Scraping クラスに保存する
-  - 同時に、検出した URL から Location の作成や次回更新日を更新する
-- Scraping
-  - Scraper の成功/失敗を持つ
-  - Crawling ごとに成功するまでいくつでも
+## Crawler クラス
 
-これらの ActiveRecord 継承クラス以外にも、Crawler / Scraper, CrawlerWorker/ScrapererWorker などが存在する(後述)
+- Location クラスからクローリング処理を移譲するクラスを判別。
 
 ---
-### Crawler
+## 3種類のクローラーを  
+## 用意
 
-#### 
-
-API かどうか
-
-HTTP ヘッダーが
-
-
----
-### 認証
-
-- ブラウザ型は使わない
-
-### 
+- HTMLクローラー(HtmlCrawler)
+  - 普通にリクエストとレスポンスを受ける。
+  - HTTPヘッダは Chrome 同等
+- API クローラー(ApiCrawler)
+  - JavaScript などからのアクセスのフリをする。
+- ブラウザ型クローラー(BrowserCrawler)
+  - ヘッドレスブラウザとしてアクセスする。
 
 ---
-### URI
+## HTTPクライアント  
+## ライブラリの選定
 
+- いろいろある。
+- 使ってみたものをいくつか紹介
 
 ---
-### module URI
+## OpenURI
+- 最初はこれで始めた。
+  - リダイレクトのオプションを知らず、検出できなかった。
+  - デバッグで気づいた。
+- 同様の理由でブラウザ操作型もやめた。
+  - リクエストした URL と現在の URL の比較でしかリダイレクトの検出ができない。
+  - phantom.js の開発終了
 
-標準ライブラリ
+---
+## Net::HTTP
+- HTTPプロトコル専門ではないので使いにくかった。
 
-注意
+---
+## Mechanize
+- 抽象度が高すぎて不向き
 
+---
+## phantom.js
+- 今は亡きヘッドレスブラウザ
+  - 仕事ではお世話になりました。
+- JavaScript実行前のHTMLがわからない
+- リダイレクトの検出に苦戦
+  - リクエスト時のURLと現在のURLを比較
 
-### 雰囲気
+---
+## 最終的に typhoeus
+- libcurl ラッパー
+  - 機能は一番豊富そう
+- 並列リクエスト機能を使う可能性があった
+  - 後述の理由により使わずじまい
+- ブラウザ型は必要なかった。
+  - ログイン不要
+  - パーソナライズ箇所不要
 
+---
+## 諦めたもの
+- VASILY(当時の社名)みたいなかっこいい並列リクエスト
+  - [iQONを支えるクローラーの裏側](https://www.slideshare.net/TakehiroShiozaki/iqon-54979883)
+  - 個人で扱うには複雑すぎる。
+
+---
+## サイトあたりの
+## クローリングルール
+
+- 1 つのドメインにたいしては、直列に URL を 1 つずつクロール
+
+---
+## クローリングの紳士協定
+
+- [Webサイトをクローリングするときに気を付けたい2つのこと](https://ascii.jp/elem/000/001/177/1177656/)
+  - 1秒に1回程度のアクセス頻度であること
+  - 応答があってから新しい要求をするようプログラムを組んでいること
+- Librahack事件
+  - 今日は法律については触れないので注意されたし
+
+---
+### クロールの単位
+- 単位時間あたり
+  - 1日あたりで済んだ
+- 同じURLを1回アクセス
+- 対象サイトのページ数と更新頻度を見積もり、おおよそ十分だとわかった。
+
+---
 ```rb
-```
-
-```rb
-```
-
-```rb
-```
-
-```rb
-```
-
-
-```
-```
-
----
-### ブラウザの URL が登場する箇所
-
----
-### どのURLからクロールしても問題ない設計
-
-- has_many & belongs_to の組み合わせの問題点
-  - belongs_to は先に親のモデルのスクレイピングが終わっていないと使えない。
-    - 親のいないレコードとか作らないですよね？
-  - code 属性を持つモデルの has_many は has_many through を使う
-
-- 中身はないが、 code 値のみ設定された ActiveRecord インスタンスが必要になることもある
-
-- そのため、
-
-特に、一度保存した値を 
-
-たとえば、サイトの
-
-次のスクレイピングでサイトのデザイン変更により、取得済み Item#name を空文字や `nil` で更新してしまうといったおそれがある。
-
-
- のような特別なコンテキストを作ったりしたが、最終的に煩雑でやめた。
-
-```rb
-class Item < ApplicationRecord
-  validates :code, presence: true, format: { /ID\d+/ } ## 常に presence: true
-  validates :name, length: { maximum: 100 } ## ここでは presence: true を指定しない
-
-  with_options(on: :complete) do
-    validates :name, presence: true
+class ApiCrawler
+  def crawl(location)
+    REQUEST_HEADERS = {
+      # ブラウザからコピーしたヘッダを Hash で定義
+    }
+    request_headers =
+      if location.referer
+        REQUEST_HEADERS.merge(
+          'Referer' => location.referer.url,
+        )
+      else
+        REQUEST_HEADERS.except('Referer')
+      end
+    @request =
+        Typhoeus::Request.new(
+          location.url,
+          method: :get, 
+          headers: request_headers
+        )
+    @request.run
   end
 end
 ```
 
-スクレイピングの処理の最後で
+---
+## Module#delegate
 
+- ActiveSupport の便利拡張
+- 外部ライブラリのラッパーをつくるときに移譲が便利にできる。
+
+---
 ```rb
-item.save!(:complete) # => name が消えてしまっていたら raise する
+class ApiCrawler
+  delegate :response, to: :@request
+  delegate :headers, :status, to: :response
+end
 ```
 
-とする。
-
-=> `update!` メソッドにコンテキストを渡せないので、コードが地味に増えるを嫌ってやめた。
-   - XPath の指定方法のノウハウが溜まってきたのもある。
-
-before_save で `changes` を参照し、更新前後の値をチェックする DSL を作る
-=> テーブルのカラムを調整する
-設定が面倒になってやめる。
-=> 結局 raise するのだから、
-
-=> `audited` gem で変更履歴を持つことにした。
-
-Vasily さんのように XPath をDBに保存するのもやめた。
-一人で開発するには非常に書きにくい。
-
-そのため、大胆に `crawling.run_date` で分岐することにした。
-レイアウト変更は、数年に一度しか起こらない（ほんとか？）
-
 ---
-### 起点となるページ
-- サイトのホームページ '/'
-- サイトマップページ
-  - リニューアルでサイトマップページが消失したことがある
-- `sitemap.xml` ( `robots.txt` を調べておく)
-
-- その結果、その他の用途では `has_many` で問題ないものが、 has_many through 関連が
-  - 数件のレコードしかできないものを ActiveRecord を使わずに `active_hash` で実装していたが、 active_hash は has_many through が使えないため、
-
----
-### パンくずリスト
-
-- パンくずリストの2タイプ
-  - 階層構造
-    - カテゴリー
-  - 画面遷移順
-
-気づき
-
-- パンくずリストはM対Nの構造をしていることがある
-  - 両端がポリモーフィック関連の `has_many through` が爆誕
-- 恣意的に別のリンクになっていたりする
-  - `<a href="/link">text</a>` タグの href と text が一致していなかったりする
-
----
-## has_many / has_one
-
-### has_one だと思っていたら、違った。
-
-`table` タグ内の `tr` タグの数と実際にできた ActiveRecord の数を比較したら一致しない。
-
-=> 元のデータに重複があった。
-
----
-### HTTP スタータスの管理
+## HTTPスタータスの管理
 
 Rails を使うと Rack が付いてくるので、 Rack::Utils をありがたく流用する。
 
 ---
 ### Rack::Utils::SYMBOL_TO_STATUS_CODE
 
-HTTP ステータスの番号と内容を持ったハッシュ
+- `Rack`
+  - WebサーバーとAPサーバーのインターフェース
+  - Railsに付いてくる
+- HTTP ステータスの番号と内容を持ったハッシュ
 
+---
 ```rb
 class SiteA::Crawling < ApplicationRecord
   validates :http_status,
@@ -799,7 +581,7 @@ class SiteA::Crawling < ApplicationRecord
       http_status_before_type_cast == status_code
     end
   end
-
+  # 足りないのは追加
   def redirect?
     http_status.in?(300..308)
   end
@@ -807,22 +589,20 @@ end
 ```
 
 ---
-### Rack::Utils::SYMBOL_TO_STATUS_CODE
-
-次のようなコードが書ける。
 
 ```rb
 crawling = Crawling.last
-crawling.ok? # => false
+crawling.rediret?   # => false
+crawling.ok?        # => false
 crawling.not_found? # => true
 ```
 
 ---
-### html の保存
+## html の保存
 
-- 現代ではほぼ `UTF-8`
+- 現代の文字エンコーディングはほぼ `UTF-8`
 
-- それなりに大きい
+- それなりにサイズが大きい
 - 必要な箇所だけ削ったりせず、まるごと保存する方針
 - JavaScript/CSSは保存しない
 - できれば圧縮したい
@@ -831,17 +611,10 @@ crawling.not_found? # => true
 ---
 ## html の保存
 
-### とりあえずテキストで ActiveRecord に保存することにした。
-
-
----
-## html の保存
-
-- `Crawling#body`
 - とりあえずテキストで ActiveRecord に保存することにした。
+- `Crawling#body`
 
 ---
-## html の保存
 
 ```ruby
 class Crawlings < ActiveRecord::Migration[5.0]
@@ -863,23 +636,32 @@ end
 ---
 ## AWS S3 に保存することを検討
 
-- PostgreSQL に保存する場合、他の属性に比べてサイズが大きいのが気になる
+- PostgreSQL に保存する場合、他のカラムに比べてサイズが大きいのが気になる
 - HTML/JSON を AWS S3 に保存してはどうか？
 
 ---
 ## ActiveStorage
-- バイナリストレージのインターフェイス
-- S3 への保存までよしなにやってくれる
-- S3 ホスティング機能と合わせて、クロールした HTML がブラウザで確認できる。  
-  これは便利。
+- ストレージのインターフェイス
+  - Railsに付いてくる
+- 設定をすれば、ローカルファイルや S3 への保存までよしなにやってくれる
+- S3のホスティング機能と合わせて、クロールしたHTMLがブラウザで確認できる  
+  - これは便利！
 
 ---
-## S3 に保存する問題点
-- 自分の AWS のドメインのリファラーでターゲットサイトのファイルを取得するリクエストが飛んでしまうことに気づいた。まずそう。(しかもパブリックにすると完全にアウト)
+## S3 に保存する懸念(1)
+- 自分の AWS のドメインのリファラーで対象サイトのファイルを取得するリクエストが飛んでしまうことに気づいた。
+  - まずそう
+  - うっかり認証外すと完全にアウト
+
+---
+## S3 に保存する懸念(2)
 - 管理するストレージが RDS (AWS のRDBMS サービス) 以外を増やしたくなかった。
   - サービス以外に、キー管理なども増える
+
+---
+## S3 に保存する懸念(3)
 - ActiveRecord に HTML が入ってないのはデバッグなどでなにかと面倒そう。
-  - 裏側で HTTP リクエストが入るなど
+  - 裏側でHTTPリクエストが走っているなど
 
 ---
 ## S3 はやっぱナシ
@@ -889,17 +671,17 @@ end
 ---
 ## よくよく考えると...
 
-### ブラウザは圧縮されたHTMLを受け取っていることを思い出す。
+### ブラウザは圧縮されたHTMLを受け取っている
 
 ---
-## Accept-Encoding ヘッダ
-## Content-Encoding ヘッダ
+## Accept-Encoding /
+## Content-Encoding
 
 ### リクエスト時に `Accept-Encoding: gzip, deflate, br` を付ける
 ### => レスポンス時に `Content-Encoding: gzip` で body を gzip で返ってくる
 ###    (Web サーバーが対応していれば)
 
-## 思いついた。
+## 思いついた！
 ### => gzip でレスポンスが返ってきたらそのままバイナリ保存、取り出すときに gzip を戻す
 ### テキストでレスポンスが返ってきたら、 gzip 圧縮してバイナリで保存、取り出すときに gzip を戻す
 
@@ -914,15 +696,15 @@ end
 
 - gzip 処理ができる Zlib ラッパー
   https://api.rubyonrails.org/classes/ActiveSupport/Gzip.html
-- Rails の ActiveSupprt に付いてくる。
+- Railsに付いてくる。
 
 ---
-### ActiveRecordActiveRecord::AttributeMethods#[],
-### ActiveRecordActiveRecord::AttributeMethods#[]=
+## ActiveRecordActiveRecord::AttributeMethods#[],  
+## ActiveRecordActiveRecord::AttributeMethods#[]=
 
 - ActiveRecord のアクセサを上書きするときに使える。
 - ActiveRecord の DB からキャストされた属性が入っている。
-- 今なら attributes API で置き換えられる？
+- 今なら attributes API で置き換えられるかも？
 
 ---
 ## Migration ファイルの修正
@@ -946,7 +728,7 @@ end
 ```
 
 ---
-### ActiveRecord アクセサのオーバーライド
+### gzip 判定
 
 ```rb
 class Crawling < ApplicationRecord
@@ -975,7 +757,12 @@ class Crawling < ApplicationRecord
       self[:body].force_encoding(Settings.encoding.mysite)
     end
   end
+end
+```
 
+---
+```rb
+class Crawling < ApplicationRecord
   def body=(body_html)
     self[:body] =
       if body_html.blank?
@@ -993,8 +780,10 @@ end
 ## ところがある日、
 ## gzip がうまくいっていない
 
-- 同じ HTTP ヘッダは複数返ってくることがある。
+- 同じHTTPヘッダは複数返ってくることがある。
 - 思い込み注意
+
+---
 
 ```
 Vary: Accept-Encoding
@@ -1002,7 +791,7 @@ Vary: User-Agent
 ```
 
 ---
-## 同一 HTTP ヘッダの動作
+## 同一HTTPヘッダの動作
 
 - Rack の仕様では、配列になる。
 - 型が String の場合と Array の場合がある。
@@ -1013,19 +802,18 @@ Vary: User-Agent
 
 ### `Object#equal_or_include?` が誕生
 
-    ```rb
-    class Object
-    def equal_or_include?(other)
-        (self == other) || (respond_to?(:include?) && include?(other))
-    end
-    end
-    ```
+```rb
+class Object
+  def equal_or_include?(other)
+    (self == other) || (respond_to?(:include?) && include?(other))
+  end
+end
+```
 
 ---
 ## config/initializers/
-
 - 標準クラスをアプリケーション独自に拡張する場合はここに置いておけばよい。
-- やりすぎ注意(仕事ではできるだけ避ける))
+- やりすぎ注意
 
 ---
 ```diff
@@ -1042,15 +830,11 @@ end
 
 ---
 ## それでもある日、 gzip がうまくいっていない
-
-```
-nginxは設定ファイルにgzip_vary on;と書かないと
-Vary: Accept-Encoding をレスポンスヘッダに付加しません。
-https://qiita.com/cubicdaiya/items/09c8f23891bfc07b14d3
-```
-
 - `Content-Encoding: gzip` が返ってきても `Vary: Accept-Encoding` も返すとは限らない。
-- サーバーの設定が突然変わることもある。
+
+> nginxは設定ファイルにgzip_vary on;と書かないと
+> Vary: Accept-Encoding をレスポンスヘッダに付加しません。
+https://qiita.com/cubicdaiya/items/09c8f23891bfc07b14d3
 
 ---
 ## `Accept-Encoding` チェックをやめた
@@ -1059,82 +843,317 @@ https://qiita.com/cubicdaiya/items/09c8f23891bfc07b14d3
 
 ### config/initializers/ に平和が訪れる
 
-`config/routes.rb` のようなルーターを思いつく
-  => 即撤退
-
-
-- ページデザイン変わるよね？
-
-- `Crawing#run_date` からベタにロジック分岐
-  - なにかのデザインパターンでリファクタリングするかもしれないが、そうそう起きるものではない。
-
-HTMLを保存 -> rspec を書きながらロジック修正という、大変地味なことをしている
+---
+## 教訓
+### サーバーの設定が突然変わることもある。
 
 ---
-## Crawler
+## ここでテストについて
 
-- HTML body が小さすぎる。
+2008-03-24 はてなブックマークの作り直しについて
+https://naoya-2.hatenadiary.org/entry/20080324/1206354054
 
+---
 
-- エラーが出た。
+> 自分は常々、テスト駆動開発とサービス開発は相性が悪いなと思っていました。新しい機能を作っているときや、新しいサービスを作っているときは、自分でも答えが見えていない状態で作っていることが多くあります。コードを書いているうちに少しずつ問題が解決されていって、最初は見えていなかったものが見えるようになり、答えがみえるようになる、ということが多々あります。作っては壊しを何度も繰り返すこともあります。
+> テスト駆動開発では、細かい単位とは言え、ある程度事前に何を作るかを決めてテストを書きます。このプロセスが相性が悪かったのです。
+
+---
+### 最初は試行錯誤するので `rails console` で確認するだけ
+
+DB の migration を何回やったことか。
+
+---
+## テスト書き始め
+- スクレイピングはテストを書かないと進捗が上がらない
+- 他の処理は、保存に失敗する、処理ステータスでわかる、例外が上がるのですぐわかる
+- HTML を保存しては、スクレイピングの結果が合っているを確認する地味作業
+  - 外部サイトなので、レスポンスはモックする
+
+---
+## 諦めたもの
+### 当初は Minitest を憶えようと  
+### したが、進捗が上がらず、  
+### 使い慣れた RSpec に切り替える
+
+---
+## 多様なページレイアウト
+## にどう対応するか
+
+---
+### URLから対応する Scraper を判定する
+- 対応できたこととこだけ動かす
+  - XxxScraper をどんどん追加
+  - Null Objectパターンと組み合わせて、できたら再処理
+  - `Scraping#scraper_name`
+- そのためにはクロールとスクレイピングを分離させる
+
+---
+## URL から対応する  
+## Scraper をどうやって
+## 判定するか？
+
+---
+## 諦めたもの
+- 最初は Rails の `config/routes.rb` のような、URLからスクレイピングのクラスを判別するかっこいいルーターを考えた。
+
+---
+## できた実装
+
+```rb
+class Location < ApplicationRecord
+  def guess_scraper_class
+    [
+        BarScraper,             # /bar
+        FooScraper,             # /foo
+        ItemsScraper,           # /items/ID001
+        # NOTE: 以下30行くらいクラスが並ぶ
+        # ...
+        DefaultScraper,         # Null Object
+    ].detect {|scraper|
+      scraper.match_url?(url)
+    }
+  end
+end
+```
+
+---
+## XxxScraper
+- 実装する public メソッドは 2 つだけ
+  - `.match_url?`
+  - `#scrape`
+    - 中にめちゃくちゃprivateメソッドがある
+    - XPath や `each` 、 `to_s` / `to_i` まみれ
 
 
 ---
-## href には何が埋まっているか？
-
-- リンク以外にもあるよ
-  - `javascript:void(0)`
-  - `tel:0120444444`
-  - `mailto:user@example.com`
-
----
-## URL として扱いたいもの
-
-- "https://example.com/aaa/bbb.html"
-- "/aaa/bbb.html"
-- "//example.com/aaa/bbb.html"
-- "bbb.html"
-- "/"
-- "#"
-- "/#"
-- ""
+## 諦めたもの
+- VASILY のような XPath のDB保存
+- 過去にクローリングしたHTMLも解析できないといけない
+  - スクレイピング時にクローリングした日付で判定して、ガッツリ分岐する
 
 ---
 ## 次はスクレイピング
 
-- HTML/JSON/XML からほしいデータを保存する
-- できるだけ正確なデータを取れるだけとりたい
+---
+## nokogiri
+- HTML/XMLパーサー
+- Ruby on Railsのセットアップでたまに躓くあれ
+- XPathやCSSセレクターで要素を取得し、Stringに変換
 
 ---
-## 最近は SPA も多い
+## Ruby の基本
+## ライブラリっぽく
+## 扱える
 
+### 必ずしもそうではなかった。
+### `#index` メソッドにパッチが出せた。
+
+---
+## 複数サイトを扱う方法
+- 実はこれまで `Location` や `Crawling` などと書いて説明してきたが、実際には対象サイトのモジュール名が付いている。
+
+---
+- 例
+  - `FooSite::Location`
+  - `BarSerivce::Location`
+- DBのテーブル名にもプリフィックス付き
+
+---
+## モジュールの名前空間を
+## 使う場合の問題点
+
+- コードの重複が多い。
+  - 横並びの修正がタイヘン
+- 思わぬところでサイト固有の問題を発見するため、共通化に二の足を踏む。
+
+---
+## ドメインモデル
+
+---
+## コード体系
+### 常にこういう構造を持つことにした。
+- `id` とは別に `code` というユニーク制約を持つ属性
+  - テーブルはNULL不可
+- `name` という属性を持つ
+- `code` `name` を持たない ActiveRecord はすべて紐付け等をするもの
+- 対応するURLを生成するぐらい
+  - ドメインモデルとクローラー側のモデルの結合度を少なくする
+
+---
+```rb
+module CodeAccessable
+  def to_param
+    code
+  end
+
+  def original_path
+    raise NotImplementedError
+  end
+
+  def original_url
+    "https://#{Settings.hostname.mystite}" + original_path
+  end
+end
+```
+
+---
+```rb
+class Item < ApplicationRecord
+  include CodeAccessable
+
+  validates :code, presence: true, uniqueness: true
+
+  def original_path
+    "/items/#{code}"
+  end
+end
+```
+
+---
+## データモデル、  
+## データベース設計
+
+---
+## 同じモノでもサイトに
+## よって呼び方が違う
+- Item / Goods
+- Genre / Category
+- Menu / Section
+- Movie/ Video
+
+---
+## 対象サイトの名前に
+## 合わせる
+- 認知負荷の低減
+  - 実際にスクレイピング処理を書いてみるとわかる。
+- 各サイトで微妙にデータ構造が違う
+- 属性のマッピング情報を作ることも検討したが、デバッグの効率性などから見送った。
+
+---
+## どのURLからクロールしても問題ない設計
+
+- `has_many` & `belongs_to` の組み合わせの問題点
+  - belongs_to は先に親のモデルのスクレイピングが終わっていないと使えない。
+    - 親のいないレコードとか作らないですよね？
+    - できないこともないけど...
+- 中身はなくてもコード値のみ設定された ActiveRecord インスタンスが必要になる
+
+---
+## has_many through 多用
+- code 属性を持つモデルの has_many は has_many through を使う
+- モデル数が1.5倍
+
+---
+## 諦めたこと
+
+### active_hash gem
+
+---
+## ActiveHash
+
+- DBテーブル使わずActiveRecordのように振る舞う
+- レコード数が少ない場合に便利
+
+---
+## ActiveRecord
+## に戻した
+
+`has_many through` が使えない。
+
+---
+### ページのレイアウト変更に強い設計
+
+- 以前にスクレイピング済みのモデルに対して、次回のスクレイピングでサイトのデザイン変更により、取得済み Item#name を空文字や `nil` で更新してしまうといったおそれがある。
+  - 微細な改修が入るとか
+  - キャンペーンバナーが挿入されたり
+
+---
+```rb
+class Item < ApplicationRecord
+  validates :code, presence: true, format: { /ID\d+/ } ## 常に presence: true
+  validates :name, length: { maximum: 100 } ## ここでは presence: true を指定しない
+
+  with_options(on: :complete) do
+    validates :name, presence: true
+  end
+end
+```
+
+### スクレイピングの処理の最後
+
+```rb
+def scrape
+  # めっちゃたくさんのメソッド呼び出し
+
+  item.save!(:complete) # => name が消えてしまっていたら raise する
+end
+```
+
+---
+## 問題点
+
+- `update!` メソッドにコンテキストを渡せない
+  - コードが地味に増えるを嫌ってやめた。
+  - スクレイピングコードのノウハウが溜まってきたのもある。
+
+### => `audit gem で変更履歴を持つことで代替とした。
+
+---
+## 諦めたこと
+
+- VASILY社のようにXPathをDBに保存するのもやめた。
+  - 一人で開発するには非常に書きにくい。
+
+---
+## パンくずリスト
+
+- パンくずリストは2タイプある
+  - 階層構造
+    - カテゴリー
+  - 画面遷移順
+
+---
+## パンくずリストの気づき
+
+- パンくずリストは多対多の構造をしていることがある
+  - 両端がポリモーフィック関連の `has_many through` が爆誕
+- 恣意的に別のリンクになっていたりする
+  - `<a href="/link">text</a>` タグの `href` とテキストが一致していなかったりする
+
+---
+## has_many / has_one
+
+### has_one だと思っていたらまさかの...
+
+---
+## 最近はSPAっぽい
+## サイトも多い
+- Single Page Application
 - 1 つページが HTML と 1 つ以上の API のレスポンスで構成される
 
 --- 
-## 例
-
-- ブラウザには HTML の URL が表示される
-  - HTML 上で href に入っているのはこれ
-- URL 中のコードに対応した API で JSON を取得して HTML に反映される
+## SPA例
+- ブラウザにはHTMLのURLが表示される
+  - HTML上でhrefに入っているのはこれ
+- URL中のコードに対応したAPIでJSONを取得してHTMLに反映される
 
 HTML URL `https://example.com/items/ID0001`
 API URL  `https://example.com/api/items/ID0001`
 
+--- 
 ## わかったこと
-
-- ほとんどのサイトの API は サブドメインかパスの先頭が `api` で判別可能
-
-サブドメイン型 `https://api.example.com/items/ID0001`
-先頭パス型 `https://example.com/api/items/ID0001`
+- ほとんどのサイトのAPIはサブドメインかパスの先頭で判別可能
+  - サブドメイン型 `https://api.example.com/items/ID0001`
+  - 先頭パス型 `https://example.com/api/v1/items/ID0001`
 
 ---
 ## 設計
-
-- とりあえず HTML URL をクロール
-- HTML URL のスクレイピング時に、 API の URL のみを作って保存
+1. とりあえず HTML URL をクロール
+1. HTML URL のスクレイピング時に APIのURLのみ(Location)を作って保存
   - 他のことはやらない
-- JSON API のクロール
-- JSON API のスクレイピング時にドメインモデルを作って保存
+1. JSON API のクロール
+1. JSON API のスクレイピング時にドメインモデルを作って保存
 
 ---
 ## ブラウザ型のスクレイピングツールを使えば、
@@ -1153,38 +1172,38 @@ API URL  `https://example.com/api/items/ID0001`
 ---
 ## API (JSON) を叩くとよい理由(3)
 - メタデータがついていることもある
-- タグやラベルの分類
-- セールの期間
-- リスト系 API の総件数
+  - タグやラベルの分類
+  - セールの期間
+  - リスト系 API の総件数
 
 ---
 ## API (JSON) を叩くとよい理由(4)
 - 対象のサイトでのデータベースのテーブル名やカラム名に近い名前が手に入る
-
-  例
+- 例
     - HTML 上ではコード体系が同じ2階層の "MENU"
       `/MENU0001/MEMU0002` のような URL
       両方同じコード体型なので、何回層なのか、制限はあるのは不明
     - JSON を叩くと実際は "genre" と "category" の親子構造だったことがわかる
-  - 過剰な実装を避けられる
-  - 名前付けや保存時の属性判別に悩むことが大幅に減り、開発が加速する
-  - 某作品にならって、真名と呼んでいる（余談）
+
+## API (JSON) を叩くとよい理由(4) - 2
+- 過剰な実装を避けられる
+- 名前付けや保存時の属性判別に悩むことが大幅に減り、開発が加速する
+- 某作品にならって、真名と呼んでいる（余談）
 
 ---
-### HTMLよりAPIの方が変わりにくく変更に強いか？
+## HTMLよりAPIの方が
+## 変わりにくく変更に強いか？
 - 実際はそんなに期待できないという感想
   - サイトデザインががらっと変わると、同時にAPIが新設・廃止されるケースも多い。
 
 ---
-### 力技
-
-「SPA なのにどこの API も叩いてないぞ？」
+## 謎のSPAサイト
+- 「SPAなのにどこのAPIも叩いてないぞ？」
   - HTML にはコンテンツの情報が見当たらない
   - Chrome Developer Tools の Network タブにリクエストが見当たらない
 
 ---
-### 力技
-
+### 発見！！
 `<script>` タグの中の JavaScript にコード辺を発見する。
 
 ```
@@ -1196,9 +1215,8 @@ API URL  `https://example.com/api/items/ID0001`
 ```
 
 ---
-### 力技
-
-JavaScript コード中の JSON を抽出
+## JavaScript から  
+##  JSON を抽出する
 
 ```rb
   ## script 中の .reactContext = {}; を抽出
@@ -1212,7 +1230,16 @@ JavaScript コード中の JSON を抽出
 
     deep_transform_hex_to_char(json)
   end
+```
 
+---
+## JSON
+
+- 標準ライブラリ
+- とりあえず load 呼んだら Hash になる
+
+---
+```rb
   private
 
   def deep_transform_hex_to_char(object)
@@ -1230,24 +1257,62 @@ JavaScript コード中の JSON を抽出
   end
 ```
 
+#### ActiveSupport の Hash 拡張にインスパイア
+
+---
+## String#gsub
+
+- UNIXコマンドの `sed 's/A/B/g'` 相当
+
+---
 ## Integer#chr
 
 > 与えられたエンコーディング encoding において self を文字コードと見た時、それに対応する一文字からなる文字列を返します。 引数無しで呼ばれた場合は self を US-ASCII、ASCII-8BIT、デフォルト内部エンコーディングの順で優先的に解釈します。
 
+---
 ## String#to_i
 
 > 基数を指定することでデフォルトの 10 進以外に 2 〜 36 進数表現へ変換できます。 
-https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html
+[https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html](https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html)
 
+---
+```rb
+  def deep_transform_hex_to_char(object)
+    case object
+      # ...
+    when String
+      ## NOTE: 記号が "x20" "x3F" などで埋まっている
+      object.gsub(/(x[0-9A-F]{2})/) { |xHH| "0#{xHH}".to_i(16).chr }
+    # ...
+    end
+  end
+```
+
+---
 ## 悲報
 
 ### 数カ月後、この JavaScript コードが消滅し、 HTML から取得することになった。
 
-### 真名が手に入っただけでもよしとする。
+### 真名が手に入っただけでもよしとしよう...。
 
 ---
+## デザイン変わるよね？
 
+- クローリング日時からベタにロジック分岐
+  - `Crawing#run_date` 
+  - リファクタリングするかもしれないが、そうそう起きない。
+- 地味にテストを書く
 
+---
+## まとめ
+- クローリングとスクレイピングの実例を示した。
+- RubyとRailsはクローラーでの開発に使える。
+
+---
+## Q&A
+
+---
+## Tips紹介
 
 ---
 ### 隅つきカッコ
@@ -1296,15 +1361,10 @@ https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html
 - ブラウザを信じない
 
 ---
-### 作ってみて気づいたコードの特徴
-
-- ActiveRecord を始めとしたライブラリのAPIを呼び出す箇所は、ベタに書いてることが多い。
-- わざとらしいほど説明的なメソッド名が多い
-- DRY にできそうでできない
-
----
 ## Rails の仕様変更
 
+- breaking changes がパッチバージョンでしれっと出てる。
+- テストコード重要
 
 ---
 ## サイトマップのリンクに間違いがある
@@ -1312,30 +1372,50 @@ https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html
 「このリンク間違ってる」
 - 対応するコード書くのはめんどう
 
-=> サポートに連絡する
+---
+## サポートページから連絡
 
-詳細は割愛
+---
+## 返事来た。
 
 > ※本メールの内容を無断転載・複製・引用のために使用することを禁止させていただきます。
 
-
-
----
-## まとめ
-
-- クローリングとスクレイピングの設計例を示した。
-- Ruby と Rails はクローラーでの開発に使える。
+割愛
 
 ---
-### Which HTTP Client
+## 複雑な URL
 
-- Open URI
-- Net::HTTP
-- 
-- Mechanize
-- Selenium Web Driver
-- Phantom.js
-- other REST API libiraries
+---
+### ?_=12340000000000000
 
+---
+### 最初はこのようなナイーブな実装を試みた。(省略)
 
-- nokogiri
+### この実装の問題(省略)
+- リストをどうする
+- IDの管理をどうする
+  - おおよそ1始まりで整数だったりするが、空き番がわからない。管理するロジックを考えなくてはならない。
+  /items/ID00011
+  - 特に、過去に存在していた URL なのかどうかわからない
+
+---
+```rb
+class Location < ApplicationRecord
+  DEFAULT_SCHEME = 'https'
+  REJECT_SCHEMES = ['javascript', 'tel', 'mailto']
+  ORIGIN = "#{DEFAULT_SCHEME}://#{Settings.hostname.example.com}" # config gem
+  HOST_URL = ORIGIN + '/'
+
+  belongs_to :following_location, optional: true, class_name: 'Location'
+  belongs_to :referer, optional: true, class_name: 'Location'
+  belongs_to :canonical_location, optional: true, class_name: 'Location'
+
+  has_many :crawlings, class_name: 'Crawling'
+
+  serialize :headers, JSON # リクエストヘッダー
+
+  validates :url, presence: true, uniqueness: { scope: [:page, :per_page] }, format: { with: %r|\Ahttps?://[^\n]+\z| }, on: :create
+  validates :page, numericality: { only_integer: true }, allow_blank: true
+  validates :per_page, numericality: { only_integer: true }, allow_blank: true
+end
+```
