@@ -8,7 +8,7 @@
 - フリーランスプログラマー
   - 川崎在住
 - 富山県小矢部市出身
-  - 某Rubyコミッタも同じ中学校
+  - 某Rubyコミッタも同じ中学校出身
 
 ---
 ## 地域Ruby会議の開催  
@@ -39,10 +39,10 @@
 - ECサイトとか
 
 --- 
-## 要は特定ジャンルの横断検索がしたい
+## 要は、特定ジャンルの横断検索がしたい
 
 - データが必要
-- 往々にして、サイトがライバル企業どうしだったりする
+- 往々にして、サイトがライバルどうしだったりする
 - API があるのは稀
 
 ### => 取ってくるしかない
@@ -149,16 +149,129 @@ X-
 あとで書く
 
 ---
-## URL を保存するクラス(Location)
+## Location, Crawling, Scraping
 
-- URLと付随情報を保存する
+### 役割
+- Location... ターゲットのサイトの URL を保存
+- Crawling... クロールしたレスポンス結果を保存
+- Scraping... Scraping の成功、失敗を保存
+
+---
+## Location, Crawling, Scraping
+### ポイント
+- 上記 3 つの ActiveRecord クラスを Crawler クラスと Scraper クラスが操作する
+- サイトのドメインモデルをできるだけ持ち込まない。
+
+---
+## Location
+### URLと付随情報を保存する
   - リクエストパラメータ
   - リファラー（同じクラス）
   - ページネーション情報
   - 次回更新日
+
+---
+## Location
+### ソースコード
+```rb
+class Location < ApplicationRecord
+  has_many :crawlings
+
+  serialize :headers, JSON
+
+  validates :url, presence: true, uniqueness: { scope: [:page, :per_page] }
+end
+```
+
+---
+## Crawling
+### Crawler が HtmlCrawler/ApiCraler に移譲したレスポンス結果を保存
+- クローラー実行日時
+
+---
+## Crawling
+
+```rb
+class Crawling < ApplicationRecord
+  belongs_to :location
+  has_many :scrapings
+
+  serialize :headers, JSON
+
+  validates :http_status, presence: true, inclusion: { in: Rack::Utils::SYMBOL_TO_STATUS_CODE.values }
+  validates :run_date, presence: true
+end
+```
+
+---
+## Scraping
+### Scraper が FooScraper に移譲した処理結果を保存
+
+```rb
+class Scraping < ApplicationRecord
+  belongs_to :crawling
+
+  validates :status, presence: true
+  validates :scraper_name, presence: true
+end
+```
+
+---
+## URL を保存するクラス(Location)
+
   - 自身の URL に対応する Crawler クラスと Scraper クラスを推測する
   - 常に絶対パスで保存するようにパスからURL全体を復元したりもする
-  - 設定したドメインしか保存できない
+  - 設定したドメインに該当した URL のみしか保存できない
+
+```rb
+class Location < ApplicationRecord
+  belongs_to :following_location, optional: true, class_name: 'Location'
+  belongs_to :referer, optional: true, class_name: 'Location'
+  belongs_to :canonical_location, optional: true, class_name: 'Location'
+
+  has_many :crawlings
+
+  serialize :headers, JSON
+
+  validates :url, presence: true, uniqueness: { scope: [:page, :per_page] }, format: { with: %r|\Ahttps?://[^\n]+\z| }, on: :create
+  validates :page, numericality: { only_integer: true }, allow_blank: true
+  validates :per_page, numericality: { only_integer: true }, allow_blank: true
+
+  def self.register!(location_url, page: nil, per_page: nil, referer: self.top_page)
+    # ...
+  end
+
+  def self.target_hosts
+    [
+      Settings.hostname.mysite,
+      Settings.hostname.mysite.api,
+    ]
+  end
+
+  def self.guess_scraper_class(url)
+    if api_url?(url)
+      [
+        Api::V1::LeanbackGenresScraper,
+        Api::V1::GenreEntitiesScraper,
+        Api::V1::SearchCategoryTitlesScraper,
+        Api::V1::FeatureTitlesScraper,
+        Api::V1::TitleScraper,
+      ].detect {|scraper| scraper.match_url?(url) }
+    else
+      raise 'ScraperClassNotFound'
+    end
+  end
+
+  def self.api_url?(url)
+    uri = URI.parse(url)
+    uri.path.match?(%r|/api|)
+  end
+
+  def canonical?
+    !canonical_location_id
+  end
+end
+```
 
 ---
 ## クローリングについて
@@ -173,6 +286,13 @@ X-
   - JavaScript などからのアクセスのフリをする。
 - ブラウザ型クローラー(BrowserCrawler)
   - ヘッドレスブラウザとしてアクセスする。
+
+---
+### Crawler クラス
+
+- スクレイパーは URL 種別だけ用意したが、クローラーは 2 つで済んだ。
+- ブラウザ型クローラーは捨てた。
+- Location クラスから HtmlCrawler か ApiCrawler かを判別して、クローリング処理を移譲する。
 
 ---
 ## HTTPクライアントライブラリの選定
@@ -198,8 +318,7 @@ X-
 ---
 ## 諦めたもの
 - VASILY(現ZOZO Technology)さんみたいなかっこいい並列リクエスト
-iQONを支えるクローラーの裏側
-https://www.slideshare.net/TakehiroShiozaki/iqon-54979883
+[iQONを支えるクローラーの裏側](https://www.slideshare.net/TakehiroShiozaki/iqon-54979883)
   - mutex などの仕掛けが一人で扱うには複雑すぎる。
 
 ---
@@ -260,8 +379,8 @@ Item.find_by(code: 'ID001') # => 欲しい物ができているか確認
 - HTML を保存しては、スクレイピングの結果が合っているを確認するという地味なテストコード
   - 外部サイトなので、レスポンスはモックする
 
+---
 ## 諦めたもの
-
 ### 当初は Mninitest を憶えようとしたが、進捗が上がらず
 ### 使い慣れた RSpec に切り替える
 
@@ -892,20 +1011,20 @@ Vary: User-Agent
 ---
 ## Object クラスを拡張してしまえ
 
-Object#equal_or_include? が誕生
+### `Object#equal_or_include?` が誕生
 
-```rb
-class Object
-  def equal_or_include?(other)
-    (self == other) || (respond_to?(:include?) && include?(other))
-  end
-end
-```
+    ```rb
+    class Object
+    def equal_or_include?(other)
+        (self == other) || (respond_to?(:include?) && include?(other))
+    end
+    end
+    ```
 
 ---
 ## config/initializers/
 
-- 標準ライブラリをアプリケーション独自に拡張する場合はここに置いておけばよい。
+- 標準クラスをアプリケーション独自に拡張する場合はここに置いておけばよい。
 - やりすぎ注意(仕事ではできるだけ避ける))
 
 ---
@@ -938,6 +1057,7 @@ https://qiita.com/cubicdaiya/items/09c8f23891bfc07b14d3
 
 ### Object#equal_or_include? 消滅
 
+### config/initializers/ に平和が訪れる
 
 `config/routes.rb` のようなルーターを思いつく
   => 即撤退
@@ -1201,12 +1321,10 @@ https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html
 
 
 ---
-### まとめ
+## まとめ
 
 - クローリングとスクレイピングの設計例を示した。
 - Ruby と Rails はクローラーでの開発に使える。
----
-### 誘惑
 
 ---
 ### Which HTTP Client
