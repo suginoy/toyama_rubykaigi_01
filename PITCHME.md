@@ -32,8 +32,7 @@
 
 > メタ検索エンジン（メタけんさくエンジン）は、入力されたキーワードを複数の検索エンジンに送信し、得られた結果を表示するタイプの検索エンジン。メタサーチエンジン、横断検索エンジンとも呼ぶ。
 
-Wikipedia「メタ検索エンジン」
-https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%B3
+[Wikipedia「メタ検索エンジン」](https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%B3)
 
 - ホテルとか
 - 映画館とか
@@ -51,7 +50,7 @@ https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%8
 ---
 ## クローラーを作ってみよう
 
-#### ここでの定義
+### ここでの定義
 - クロール/クローラー
   - 外部WebサイトからHTML/JSON/XML/画像等を取得すること
 - スクレイピング/スクレイパー
@@ -60,33 +59,12 @@ https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%8
   - クロール対象のサイトのデータモデル
 
 ---
-### 制約
-- 一人でコツコツ作る
-  - 時間は有限
-  - コストは有限
-  - データの修正等の手作業は最小限
-  - あまりにも複雑な仕掛けは無理
-
----
-### 誘惑
-- 
-  - 時間は有限
-  - コストは有限
-  - データの修正等の手作業はやりたくない
-
----
-### Which HTTP Client
-
-- Open URI
-- Net::HTTP
-- 
-- Mechanize
-- Selenium Web Driver
-- Phantom.js
-- other REST API libiraries
-
-
-- nokogiri
+## 制約
+###  一人でコツコツ作る
+- 時間は有限
+- コストは有限
+- データの修正等の手作業は最小限
+- あまりにも複雑な仕掛けは無理
 
 ---
 ## 使う技術
@@ -101,39 +79,131 @@ https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%8
 - Rails は HTTP リクエストを受けてレスポンスを返す
 - クローラーは HTTP リクエストして、レスポンスを解析する
 
+### 逆のことをやればよさそう？
 ### => Rails ベースで作れそう
 
 ---
-
-- ActiveRecord 保存
-- Rack::Utils
-- ActiveSupprt の便利メソッド
+## Rails を使うメリット
+- ActiveRecord による容易なDBアクセス
+- ActionDispatch/Rack::Utils による HTTP 周りの便利ライブラリ
+- ActiveSupprt を始めとした便利ライブラリ
 
 ---
-### その他の技術
+## 他の言語の技術
 - Puppetter(JavaScript)
 - BeautifulSoup(Python)
 
+### => 得意でないので見送った。
+
 ---
-### インフラ
+## インフラ
 - GCP の機運が高まっていた
 - 多少の経験と学習のしやすさで AWS の方がやりやすいと判断
   - ついでに AWS資格も取得してみた。
   - IAM と VPC に多少の不安があった。
 
-### => AWS を使うことに
+### => AWS を使うことにした。
 
 ---
-## 諦めた 
-### Docker の利用は見送って EC2 に
+## 諦めたこと
 
-### Rails に足りないもの
-
-- HTTPリクエストを作る
-- レスポンスの解析
+### ECS(Docker) の利用は見送って EC2 にした。
 
 ---
-### 書籍で紹介されているのには問題点がいくつかある
+## Rails に足りないもの
+- HTTPリクエストを作ってレスポンスを保存するクローリング
+- レスポンスを解析するスクレイピング
+- 継続運用するための種々の構成
+
+---
+## その前に要件を確認
+
+### ターゲットのサイト
+- サイトは数個〜十数個
+- URL の種類は1サイトあたり20~30個ぐらい。
+- 全部で数千ページから数十万ページ
+  - 商品とかカテゴリとか一覧とかそういうのを想像してください。
+- 状態がたまに変わる
+  - ページが公開終了になったり、セールをしたり、coming soon とか。
+- URL に一意性を示すID(コード値) を持っていることが多い。
+- ログインしなくても参照可能なページが多い。
+- 最大頻度でも1日一回クロールで十分
+
+---
+## URL をどう保存するか
+
+- 文字列
+- 同じURLでも HTTP ヘッダで制御されている場合がある。
+
+```
+X-
+X-
+```
+
+- ページ番号などは、別途保存しておくと使いやすい。
+  - あるページから次のページの URL を取得する、 etc.
+
+---
+## URL が登場する箇所
+
+あとで書く
+
+---
+## URL を保存するクラス(Location)
+
+- URLと付随情報を保存する
+  - リクエストパラメータ
+  - リファラー（同じクラス）
+  - ページネーション情報
+  - 次回更新日
+  - 自身の URL に対応する Crawler クラスと Scraper クラスを推測する
+  - 常に絶対パスで保存するようにパスからURL全体を復元したりもする
+  - 設定したドメインしか保存できない
+
+---
+## クローリングについて
+
+---
+## 3種類のクローラーを用意した。
+
+- HTML クローラー(HtmlCrawler)
+  - 普通にリクエストとレスポンスを受ける。
+  - HTTP ヘッダは Chrome 同等
+- API クローラー(ApiCrawler)
+  - JavaScript などからのアクセスのフリをする。
+- ブラウザ型クローラー(BrowserCrawler)
+  - ヘッドレスブラウザとしてアクセスする。
+
+---
+## HTTPクライアントライブラリの選定
+
+- 
+
+---
+## 最終的に typhoeus を使うことにした。
+
+- typhoeus のヘッダーの設定等がかんたん
+
+- libcurl wrapper
+- 動的な UI 変化は必要なかった phantom.js も不要になった。
+- open URI
+  - 開発当初、リダイレクトのオプションを知らず、リダイレクト検出できなかった。
+  - 同様の理由でブラウザ操作型もやめた。
+    - リクエストした URL と現在の URL の比較でしかリダイレクト検出できない。
+    - phantom.js の開発終了
+- Net::HTTP
+- typhoeus の API が簡単で高機能だった。
+- 並列リクエストを使う可能性があった（後述の理由により最終的に使わず)
+  
+---
+## 諦めたもの
+- VASILY(現ZOZO Technology)さんみたいなかっこいい並列リクエスト
+iQONを支えるクローラーの裏側
+https://www.slideshare.net/TakehiroShiozaki/iqon-54979883
+  - mutex などの仕掛けが一人で扱うには複雑すぎる。
+
+---
+### 書籍で紹介されている手法には問題点がいくつかある
 
 - 単発のページをスクレイピングする程度で、継続運用する手法がない
 - 対象の Web サイトのその時点のスナップショットしか取れない
@@ -143,34 +213,6 @@ https://ja.wikipedia.org/wiki/%E3%83%A1%E3%82%BF%E6%A4%9C%E7%B4%A2%E3%82%A8%E3%8
   - サーバーメンテナンス、障害
 - どう保存するか
 
-
----
-### 使ってみた
-
-### 
-
----
-### 最終的に
-
-- libcurl wrapper
-- phantom.js も不要になった。
-
----
-### 最終的に
-理由
-
-- ブラウザ操作型は、リダイレクトの検出が面倒だった。
-  - リクエスト時の URL と現在ブラウザが開いている URL を比較 ,etc.
-  - 同じ理由で、 Open URI は、リダイレクトのオプションが当初わからず捨ててしまった。
-- HTTP ヘッダや cookie を柔軟に設定できる必要があった。
-- 並列リクエストを使う可能性があった（後述の理由により最終的に使わず)
-
----
-### ターゲットサイト
-- 数千ページから数十万ページ
-  - 商品とかカテゴリとかそういうのを想像してください
-- 状態がたまに変わる
-  - ID を持っていることが多い
 
 ### 
 
@@ -235,16 +277,6 @@ Location のコード
 ```
 
 ---
-## 諦めたもの
-
-### 並列リクエスト 
-
-- VASILYさんみたいなかっこいい並列リクエスト
-
-iQONを支えるクローラーの裏側
-https://www.slideshare.net/TakehiroShiozaki/iqon-54979883
-
----
 ## クローリングの紳士協定
 
 - 1秒に1回程度のアクセス頻度であること
@@ -259,14 +291,14 @@ https://ascii.jp/elem/000/001/177/1177656/
 - 1 つのドメインにたいしては、シリアルに URL を 1 つずつクロールする
 
 ---
-## 必要な使用
+## 必要な仕様
 
 - 複数ページのリンクをたどらない
-  - どこでエラーになるかわからない
+  - どこでエラーになるかわからないため
 - 
 - 後日でもリクエストできるようにする
-
-
+  - 1日にクロールできる数には限界がある
+  Admin's Bar 5: 86,400の壁 (Kyuns) http://admins.bar/5/
 - 対象サイトのページ数と更新頻度を見積もり、
 - おおよそ十分だということがわかった。
 
@@ -297,18 +329,17 @@ SQL で次のような条件を書いて、
 
 - Item / Goods
 - Genre / Category
-- Video / Movie
+- Movie/ Video
 - Menu / Section
 
-### => 基本的に、対象のサイトの名前の合わせることにした。
+### 対象のサイトの名前に合わせるのが基本
 
 - 認知不可の低減
   - 実際にAPI の JSON の属性名や CSS やHTMLのスクレイピング処理を書くと、こうしないときつい。
-- 各サイトで微妙にデータ構造が違うため、
+- 各サイトで微妙にデータ構造が違う
 - 属性のマッピング情報を作ることも少しだけ検討したが、デバッグの効率性などから見送った。
 
 ### 諦めたもの
-
 - VASILY のような XPath のDB保存
 
 過去にクローリングしたHTMLも解析できないといけないため、
@@ -317,6 +348,8 @@ SQL で次のような条件を書いて、
 ```rb
 
 def scrape()
+
+end
 
 ---
 ## 諦めたもの
@@ -336,14 +369,46 @@ def scrape()
 
 ActiveRecord はつねにこういう構造を持つことにした。
 
-- `id` とは別に `code` というユニーク制約を持つ(null不可)
+- `id` とは別に `code` というユニーク制約を持つ属性(null不可)
 - `name` という属性を持つ
 - 他の属性名は対象のサイトに合わせる
+- `code` `name` を持たない ActiveRecord はすべて紐付け等をするもの
+- url を生成するぐらいで、ほとんどただの箱
+
+### 対象のドメインのモデルとクローラーのモデルの結合度を少なくする
+
+```rb
+module CodeAccessable
+  def to_param
+    code
+  end
+
+  def original_path
+    raise NotImplementedError
+  end
+
+  def original_url
+    "https://#{Settings.hostname.mystite}" + original_path
+  end
+end
+```
+
+```rb
+class Item < ApplicationRecord
+  include CodeAccessable
+
+  validates :code, presence: true, uniqueness: true, on: :create
+
+  def original_path
+    "/items/#{code}"
+  end
+end
+```
 
 ---
-### 最初はこのようなナイーブな実装を試みた。
+### 最初はこのようなナイーブな実装を試みた。(省略)
 
-### この実装の問題
+### この実装の問題(省略)
 - リストをどうする
 - IDの管理をどうする
   - おおよそ1始まりで整数だったりするが、空き番がわからない。管理するロジックを考えなくてはならない。
@@ -351,17 +416,6 @@ ActiveRecord はつねにこういう構造を持つことにした。
   - 特に、過去に存在していた URL なのかどうかわからない
 
 ---
-### 対象のドメインのモデルとクローラーのモデルの結合度を少なくする
-
-- Location 
-  - URLと付随情報を保存する
-    - リクエストパラメータ
-    - リファラー（同じクラス）
-    - ページネーション情報
-    - 次回更新日
-  - 自身の URL に対応する Crawler クラスと Scraper クラスを推測する
-  - 絶対パスで保存するようにパスからURL全体を復元したりもする
-  - 設定したドメインしか保存できない
 
 ---
 ### URL はどこに登場するか？
@@ -434,6 +488,13 @@ class Location < ApplicationRecord
   end
 end
 ```
+
+---
+## 複雑な URL
+
+
+---
+### ?_=12340000000000000
 
 ---
 - ExclusiveLocation
@@ -649,38 +710,85 @@ crawling.not_found? # => true
 - 画像、動画、音声などのファイルについては、今回は割愛
 
 ---
-### html の保存
-- HTML/JSON を AWS S3 に保存することを検討した。
-- S3 でそのままクロールした HTML がブラウザで確認できる。これは便利。
+## html の保存
+
+### とりあえずテキストで ActiveRecord に保存することにした。
+
 
 ---
-### AWS S3 に保存する問題点
-- 自分の AWS のドメインのリファラーでターゲットサイトのファイルを取得するリクエストが飛んでしまうことに気づいた。まずそう。
+## html の保存
+
+- `Crawling#body`
+- とりあえずテキストで ActiveRecord に保存することにした。
+
+---
+## html の保存
+
+```ruby
+class Crawlings < ActiveRecord::Migration[5.0]
+  def change
+    create_table :crawlings do |t|
+      t.belongs_to :location, foreign_key: { to_table: :locations }, null: false
+      t.date :run_date, null: false
+      t.integer :http_status, null: false
+      t.string :crawler_name, null: false
+      t.text :headers, null: false # レスポンスヘッダ
+      t.text :body  # レスポンスボディ
+
+      t.datetime :created_at, null: false
+    end
+  end
+end
+```
+
+---
+## AWS S3 に保存することを検討
+
+- PostgreSQL に保存する場合、他の属性に比べてサイズが大きいのが気になる
+- HTML/JSON を AWS S3 に保存してはどうか？
+
+---
+## ActiveStorage
+- バイナリストレージのインターフェイス
+- S3 への保存までよしなにやってくれる
+- S3 ホスティング機能と合わせて、クロールした HTML がブラウザで確認できる。  
+  これは便利。
+
+---
+## S3 に保存する問題点
+- 自分の AWS のドメインのリファラーでターゲットサイトのファイルを取得するリクエストが飛んでしまうことに気づいた。まずそう。(しかもパブリックにすると完全にアウト)
 - 管理するストレージが RDS (AWS のRDBMS サービス) 以外を増やしたくなかった。
   - サービス以外に、キー管理なども増える
-- ActiveRecord 自身に HTML が入ってないのはデバッグなどでなにかと面倒そう。
+- ActiveRecord に HTML が入ってないのはデバッグなどでなにかと面倒そう。
+  - 裏側で HTTP リクエストが入るなど
 
 ---
-### HTML を圧縮して保存したい
+## S3 はやっぱナシ
 
-とりあえずテキストで ActiveRecord に保存することにした。
-よくよく考えると、実はブラウザは圧縮されたHTMLを受け取っていることを思い出す。
-
----
-### accept-encoding (リクエスト)/Content-Encoding(レスポンス)ヘッダー
-
-リクエスト時に `accept-encoding: gzip, deflate, br` を付ける
-レスポンス時に `content-encoding: gzip` で body を gzip で返ってくる
-  (サーバーが対応していれば)
-
-#### => gzip でレスポンスが返ってきたらそのままバイナリ保存、取り出すときに gzip を戻す
-####    テキストでレスポンスが返ってきたら、 gzip 圧縮してバイナリで保存、取り出すときに gzip を戻す
+### しかし、圧縮はしたい。
 
 ---
-### Vary ヘッダー
+## よくよく考えると...
+
+### ブラウザは圧縮されたHTMLを受け取っていることを思い出す。
+
+---
+## Accept-Encoding ヘッダ
+## Content-Encoding ヘッダ
+
+### リクエスト時に `Accept-Encoding: gzip, deflate, br` を付ける
+### => レスポンス時に `Content-Encoding: gzip` で body を gzip で返ってくる
+###    (Web サーバーが対応していれば)
+
+## 思いついた。
+### => gzip でレスポンスが返ってきたらそのままバイナリ保存、取り出すときに gzip を戻す
+### テキストでレスポンスが返ってきたら、 gzip 圧縮してバイナリで保存、取り出すときに gzip を戻す
+
+---
+## Vary ヘッダー
 
 - 「これによってはレスポンスを変えるよ」というレスポンスヘッダー
-- gzip の場合は、 `Vary: accept-encoding` というレスポンスヘッダーが返る。
+- gzip の場合は、 `Vary: cccept-encoding` というレスポンスヘッダーが返る。
 
 ---
 ## ActiveSupport::Gzip
@@ -691,15 +799,14 @@ crawling.not_found? # => true
 
 ---
 ### ActiveRecordActiveRecord::AttributeMethods#[],
-### ActiveRecordActiveRecord::AttributeMethods#[]=()
+### ActiveRecordActiveRecord::AttributeMethods#[]=
 
 - ActiveRecord のアクセサを上書きするときに使える。
 - ActiveRecord の DB からキャストされた属性が入っている。
 - 今なら attributes API で置き換えられる？
 
-
 ---
-## Migration
+## Migration ファイルの修正
 
 ```diff
 class Crawlings < ActiveRecord::Migration[5.0]
@@ -720,6 +827,8 @@ end
 ```
 
 ---
+### ActiveRecord アクセサのオーバーライド
+
 ```rb
 class Crawling < ApplicationRecord
   serialize :headers, JSON
@@ -729,7 +838,13 @@ class Crawling < ApplicationRecord
     headers['Vary'] == 'Accept-Encoding' &&
       headers['Content-Encoding'] == 'gzip'
   end
+end
+```
 
+---
+### ActiveRecord アクセサのオーバーライド
+```rb
+class Crawling < ApplicationRecord
   def body
     return nil unless self[:body]
 
@@ -756,25 +871,30 @@ end
 ```
 
 ---
-## ところがある日、gzip がうまくいっていない
+## ところがある日、
+## gzip がうまくいっていない
 
-- 同じ HTTP ヘッダーは複数返ってくることがある。
+- 同じ HTTP ヘッダは複数返ってくることがある。
+- 思い込み注意
 
 ```
 Vary: Accept-Encoding
 Vary: User-Agent
 ```
 
+---
+## 同一 HTTP ヘッダの動作
+
 - Rack の仕様では、配列になる。
 - 型が String の場合と Array の場合がある。
 - とても困る。
 
 ---
-## Object クラスを拡張してしまう
+## Object クラスを拡張してしまえ
 
 Object#equal_or_include? が誕生
 
-```config/initializers/object.rb
+```rb
 class Object
   def equal_or_include?(other)
     (self == other) || (respond_to?(:include?) && include?(other))
@@ -786,13 +906,11 @@ end
 ## config/initializers/
 
 - 標準ライブラリをアプリケーション独自に拡張する場合はここに置いておけばよい。
-- やりすぎ注意(Objectクラス拡張しといてなんだが...)
+- やりすぎ注意(仕事ではできるだけ避ける))
 
 ---
 ```diff
 class Crawling < ApplicationRecord
-  serialize :headers, JSON
-
   def gzip?
 -   headers['Vary'] == 'Accept-Encoding' &&
 +   headers['Vary'].equal_or_include?('Accept-Encoding') &&
@@ -806,15 +924,19 @@ end
 ---
 ## それでもある日、 gzip がうまくいっていない
 
-> nginxは設定ファイルにgzip_vary on;と書かないと
-> Vary: Accept-Encoding をレスポンスヘッダに付加しません。
+```
+nginxは設定ファイルにgzip_vary on;と書かないと
+Vary: Accept-Encoding をレスポンスヘッダに付加しません。
 https://qiita.com/cubicdaiya/items/09c8f23891bfc07b14d3
+```
 
 - `Content-Encoding: gzip` が返ってきても `Vary: Accept-Encoding` も返すとは限らない。
-- サーバーの設定が突然変わることもある。:cry:
+- サーバーの設定が突然変わることもある。
 
 ---
-## Object#equal_or_include? 消滅
+## `Accept-Encoding` チェックをやめた
+
+### Object#equal_or_include? 消滅
 
 
 `config/routes.rb` のようなルーターを思いつく
@@ -829,7 +951,7 @@ https://qiita.com/cubicdaiya/items/09c8f23891bfc07b14d3
 HTMLを保存 -> rspec を書きながらロジック修正という、大変地味なことをしている
 
 ---
-### Crawler
+## Crawler
 
 - HTML body が小さすぎる。
 
@@ -838,7 +960,7 @@ HTMLを保存 -> rspec を書きながらロジック修正という、大変地
 
 
 ---
-### href には何が埋まっているか？
+## href には何が埋まっているか？
 
 - リンク以外にもあるよ
   - `javascript:void(0)`
@@ -846,7 +968,7 @@ HTMLを保存 -> rspec を書きながらロジック修正という、大変地
   - `mailto:user@example.com`
 
 ---
-### URL として扱いたいもの
+## URL として扱いたいもの
 
 - "https://example.com/aaa/bbb.html"
 - "/aaa/bbb.html"
@@ -899,24 +1021,24 @@ API URL  `https://example.com/api/items/ID0001`
 ## HTML ページのみのクロールで済むのでは？
 
 ---
-### API (JSON) を叩くとよい理由(1)
+## API (JSON) を叩くとよい理由(1)
 - DOM 要素を XPath や CSS セレクターや抽出するよりも JSON の方が正確な構造化がされている
   - HTML では並列にならんでいるけどデータモデルは子供
 
 ---
-### API (JSON) を叩くとよい理由(2)
+## API (JSON) を叩くとよい理由(2)
 - より正確な値が手に入る
   - HTML 上では `分` と表示されているのが、実際は `秒` で取得できる
 
 ---
-### API (JSON) を叩くとよい理由(3)
+## API (JSON) を叩くとよい理由(3)
 - メタデータがついていることもある
 - タグやラベルの分類
 - セールの期間
 - リスト系 API の総件数
 
 ---
-### API (JSON) を叩くとよい理由(4)
+## API (JSON) を叩くとよい理由(4)
 - 対象のサイトでのデータベースのテーブル名やカラム名に近い名前が手に入る
 
   例
@@ -1083,3 +1205,19 @@ https://docs.ruby-lang.org/ja/latest/method/String/i/to_i.html
 
 - クローリングとスクレイピングの設計例を示した。
 - Ruby と Rails はクローラーでの開発に使える。
+---
+### 誘惑
+
+---
+### Which HTTP Client
+
+- Open URI
+- Net::HTTP
+- 
+- Mechanize
+- Selenium Web Driver
+- Phantom.js
+- other REST API libiraries
+
+
+- nokogiri
